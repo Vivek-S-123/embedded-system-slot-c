@@ -1,0 +1,55 @@
+#include <systemc.h>
+#include <iostream>
+
+using namespace std;
+
+SC_MODULE(RoboticArm)
+{
+    void arm_process()
+    {
+        wait(1, SC_SEC);
+
+        cout << "[Embedded C] Arm moving..." << endl;
+        cout << "[Embedded C] Arm reached position A" << endl;
+    }
+
+    void gripper_process()
+    {
+        wait(2, SC_SEC);
+
+        cout << "[Embedded C] Gripper opening..." << endl;
+        cout << "[Embedded C] Gripper closed" << endl;
+    }
+
+    void sensor_process()
+    {
+        wait(3, SC_SEC);
+
+        cout << "[Embedded C] Sensor checking..." << endl;
+        cout << "[Embedded C] Object detected" << endl;
+    }
+
+    SC_CTOR(RoboticArm)
+    {
+        SC_THREAD(arm_process);
+        SC_THREAD(gripper_process);
+        SC_THREAD(sensor_process);
+    }
+};
+
+int sc_main(int argc, char* argv[])
+{
+    cout << "====================================" << endl;
+    cout << " Industrial Robotic Arm Simulation" << endl;
+    cout << "====================================" << endl;
+
+    RoboticArm robot("ROBOT");
+
+    sc_start(4, SC_SEC);
+
+    cout << "====================================" << endl;
+    cout << " Simulation Completed" << endl;
+    cout << "====================================" << endl;
+
+    return 0;
+}
