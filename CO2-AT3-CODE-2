@@ -1,0 +1,125 @@
+#include <systemc.h>
+#include <iostream>
+
+using namespace std;
+
+/* Interrupt-driven data acquisition */
+SC_MODULE(Interrupt_Acquisition)
+{
+    sc_event data_ready;
+    int sensor_data;
+    int samples;
+
+    SC_CTOR(Interrupt_Acquisition)
+    {
+        sensor_data = 0;
+        samples = 0;
+
+        SC_THREAD(sensor);
+        SC_THREAD(interrupt_handler);
+    }
+
+    void sensor()
+    {
+        for(int i = 1; i <= 5; i++)
+        {
+            wait(100, SC_MS);
+
+            sensor_data = i * 10;
+
+            cout << "[INTERRUPT] Sensor generated data: "
+                 << sensor_data << endl;
+
+            /* Generate interrupt */
+            data_ready.notify();
+        }
+    }
+
+    void interrupt_handler()
+    {
+        while(samples < 5)
+        {
+            wait(data_ready);
+
+            samples++;
+
+            cout << "[INTERRUPT] Data acquired: "
+                 << sensor_data
+                 << " at "
+                 << sc_time_stamp()
+                 << endl;
+        }
+    }
+};
+
+
+/* Polling based data acquisition */
+SC_MODULE(Polling_Acquisition)
+{
+    int sensor_data;
+    int samples;
+
+    SC_CTOR(Polling_Acquisition)
+    {
+        sensor_data = 0;
+        samples = 0;
+
+        SC_THREAD(sensor);
+        SC_THREAD(polling);
+    }
+
+    void sensor()
+    {
+        for(int i = 1; i <= 5; i++)
+        {
+            wait(100, SC_MS);
+
+            sensor_data = i * 10;
+        }
+    }
+
+    void polling()
+    {
+        int last_data = 0;
+
+        while(samples < 5)
+        {
+            wait(20, SC_MS);
+
+            if(sensor_data != last_data)
+            {
+                last_data = sensor_data;
+                samples++;
+
+                cout << "[POLLING] Data acquired: "
+                     << sensor_data
+                     << " at "
+                     << sc_time_stamp()
+                     << endl;
+            }
+        }
+    }
+};
+
+
+int sc_main(int argc, char* argv[])
+{
+    cout << "Real-Time Data Acquisition Comparison" << endl;
+    cout << "======================================" << endl;
+
+    Interrupt_Acquisition interrupt_system("Interrupt_System");
+
+    Polling_Acquisition polling_system("Polling_System");
+
+    sc_start(600, SC_MS);
+
+    cout << endl;
+    cout << "======================================" << endl;
+    cout << "Comparison Completed" << endl;
+    cout << "======================================" << endl;
+
+    cout << "Interrupt method: Event driven" << endl;
+    cout << "Polling method:   Periodic checking" << endl;
+
+    return 0;
+}
