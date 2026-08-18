@@ -1,0 +1,80 @@
+#include <systemc.h>
+#include <iostream>
+
+using namespace std;
+
+/* Hardware Abstraction Layer */
+class Hardware
+{
+public:
+
+    void GPIO_Init()
+    {
+        cout << "GPIO Initialized" << endl;
+    }
+
+    void LED_ON()
+    {
+        cout << "LED: ON" << endl;
+    }
+
+    void LED_OFF()
+    {
+        cout << "LED: OFF" << endl;
+    }
+
+    bool BUTTON_READ(int state)
+    {
+        return state == 1;
+    }
+};
+
+
+/* Application */
+SC_MODULE(Application)
+{
+    Hardware hardware;
+
+    SC_CTOR(Application)
+    {
+        SC_THREAD(run);
+    }
+
+    void run()
+    {
+        hardware.GPIO_Init();
+
+        for(int i = 0; i < 5; i++)
+        {
+            cout << "Checking button..." << endl;
+
+            if(i % 2 == 0)
+            {
+                hardware.LED_ON();
+            }
+            else
+            {
+                hardware.LED_OFF();
+            }
+
+            wait(100, SC_MS);
+        }
+
+        cout << "Application completed" << endl;
+
+        sc_stop();
+    }
+};
+
+
+int sc_main(int argc, char* argv[])
+{
+    cout << "Embedded C Hardware Abstraction Demo" << endl;
+    cout << "------------------------------------" << endl;
+
+    Application app("Application");
+
+    sc_start();
+
+    return 0;
+}
